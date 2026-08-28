@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  --color-bg: #061018;
+  --color-surface: #0c1a22;
+  --color-surface-2: #12242e;
+  --color-fg: #d4ebe4;
+  --color-muted: #7a9a94;
+  --color-subtle: #4d6b66;
+  --color-accent: #7ec8b8;
+  --color-accent-fg: #061018;
+  --color-border: #1c333c;
+  --color-water: #061018;
+  --color-water-deep: #030a10;
+  --color-sand: #8a7864;
+  --color-plant: #5d8f78;
+  --color-fish-clown: #c47a5a;
+  --color-fish-tang: #6aa8a0;
+  --color-fish-angel: #c5d4ce;
+  --color-fish-gold: #c4a574;
+  --color-fish-jelly: #8fadc2;
+  --color-fish-shark: #8a9aa3;
+  --color-heart: #c47a5a;
+  --color-food: #d4c4a8;
+  --color-bubble: #9ec9c0;
+  --color-warn: #c4a574;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--color-bg);
+    color: var(--color-fg);
+  }
+
+  html,
+  body,
+  #app {
+    min-height: 100%;
+    background: var(--color-bg);
+    color: var(--color-fg);
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  html[data-bg="transparent"],
+  html[data-bg="transparent"] body,
+  html[data-bg="transparent"] #app {
+    background: transparent;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer components {
+  .abyss-shell {
+    display: grid;
+    grid-template-rows: minmax(52vh, 1fr) minmax(0, 38vh);
+    height: 100dvh;
+  }
+  .abyss-tank {
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .abyss-dock {
+    max-height: 38vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  @media (min-width: 640px) {
+    .abyss-shell {
+      grid-template-rows: none;
+      grid-template-columns: minmax(0, 1fr) 22.5rem;
+    }
+    .abyss-dock {
+      max-height: none;
+      height: 100%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
