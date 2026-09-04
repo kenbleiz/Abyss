@@ -41,6 +41,9 @@ export interface Fish {
   sleepUntil: number;
   starvedFor: number;
   eggUntil: number;
+  lastSeenAt: number | null;
+  visitStreak: number;
+  totalVisits: number;
 }
 
 export interface Particle {
@@ -106,5 +109,6 @@ export interface Snapshot {
     hunger: number;
     mood: Mood;
     namedBy: string | null;
+    visitStreak: number;
   }[];
 }

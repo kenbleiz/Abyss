@@ -181,7 +181,7 @@ export const HELP_BOX = [
   "| !poisson   visiteur         |",
   "| !nom <n>   baptiser         |",
   "| !adopte    ton poisson      |",
-  "| !monpoisson  le caresser    |",
+  "| !monpoisson  série / cœurs  |",
   "| !vague     courant          |",
   "| !requin    rare             |",
   "| !tresor    coffre           |",

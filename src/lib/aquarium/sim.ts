@@ -21,7 +21,7 @@ import {
   type CanonicalCmd,
 } from "./commands";
 import { sanitizeName } from "./names";
-import { loadTank, offlineHunger, serializeFish, writeTank } from "./save";
+import { loadTank, offlineHunger, serializeFish, TANK_SAVE_VERSION, writeTank } from "./save";
 import type { TwitchEvent } from "./twitch";
 import type {
   Actor,
@@ -33,6 +33,14 @@ import type {
   SpeciesId,
   Toast,
 } from "./types";
+import {
+  longAbsenceHunger,
+  mineCopy,
+  ownerGoneLong,
+  tickVisit,
+  welcomeCopy,
+  type VisitTick,
+} from "./visits";
 
 let seq = 1;
 const nextId = (p: string) => `${p}${seq++}`;
@@ -159,6 +167,9 @@ export class AquariumSim {
       sleepUntil: 0,
       starvedFor: 0,
       eggUntil: 0,
+      lastSeenAt: null,
+      visitStreak: 0,
+      totalVisits: 0,
     };
     this.fish.push(fish);
     return fish;
@@ -229,29 +240,40 @@ export class AquariumSim {
     this.lastChatAt = this.t;
     const parsed = parseCommand(text, prefix);
     this.log(user, text, Boolean(parsed));
-    if (!parsed) return false;
+    const visit = this.notePresence(user, { fx: false });
+    if (!parsed) {
+      if (visit?.isWelcome) {
+        const f = this.fishOf(user);
+        if (f) this.welcomeFish(user, f, visit);
+      }
+      return false;
+    }
 
     const now = this.t;
     const userKey = user.toLowerCase();
     const userReady = this.userCooldown.get(userKey) ?? 0;
-    if (now < userReady) {
-      this.toast(user, "encore un instant…");
-      return false;
-    }
     const ready = this.cooldownUntil[parsed.cmd] ?? 0;
-    if (now < ready) {
-      this.toast(user, "le récif reprend son souffle");
+    if (now < userReady || now < ready) {
+      this.toast(user, now < userReady ? "encore un instant…" : "le récif reprend son souffle");
+      if (visit?.isWelcome) {
+        const f = this.fishOf(user);
+        if (f) this.welcomeFish(user, f, visit);
+      }
       return false;
     }
 
     this.userCooldown.set(userKey, now + 3.2);
     this.cooldownUntil[parsed.cmd] = now + COMMAND_COOLDOWN[parsed.cmd];
     this.toast(user, text);
-    this.apply(parsed.cmd, user, parsed.args);
+    this.apply(parsed.cmd, user, parsed.args, visit);
+    if (parsed.cmd !== "mine" && visit?.isWelcome) {
+      const f = this.fishOf(user);
+      if (f) this.welcomeFish(user, f, visit);
+    }
     return true;
   }
 
-  apply(cmd: CanonicalCmd, user: string, args: string) {
+  apply(cmd: CanonicalCmd, user: string, args: string, visit: VisitTick | null = null) {
     switch (cmd) {
       case "feed":
         this.feed(user);
@@ -303,7 +325,7 @@ export class AquariumSim {
         this.adopt(user, args);
         break;
       case "mine":
-        this.pet(user);
+        this.mine(user, visit);
         break;
     }
   }
@@ -338,6 +360,84 @@ export class AquariumSim {
     this.cue("pet");
   }
 
+  applyVisit(f: Fish, tick: VisitTick) {
+    f.lastSeenAt = tick.lastSeenAt;
+    f.visitStreak = tick.visitStreak;
+    f.totalVisits = tick.totalVisits;
+  }
+
+  /** First chat/command of the day (or after 18h) for a nick that owns a fish. */
+  notePresence(user: string, opts: { fx?: boolean; now?: number } = {}): VisitTick | null {
+    const f = this.fishOf(user);
+    if (!f) return null;
+    const tick = tickVisit(
+      { lastSeenAt: f.lastSeenAt, visitStreak: f.visitStreak, totalVisits: f.totalVisits },
+      opts.now ?? Date.now(),
+    );
+    this.applyVisit(f, tick);
+    if (tick.isNewVisit) this.persist(true);
+    if (opts.fx !== false && tick.isWelcome) this.welcomeFish(user, f, tick);
+    return tick;
+  }
+
+  welcomeFish(user: string, f: Fish, tick: VisitTick) {
+    f.starvedFor = 0;
+    f.sleepUntil = 0;
+    if (tick.isLongAbsence) {
+      f.hunger = Math.min(100, Math.max(f.hunger, 18) + 28);
+      this.burst("heart", f.x + 3, f.y, 10, "<3", "--color-heart", -2);
+      this.burst("spark", f.x + 2, f.y - 0.4, 8, "*", "--color-accent", -1.4);
+      f.danceUntil = this.t + 6;
+    } else {
+      f.hunger = Math.min(100, f.hunger + 12);
+      this.burst("heart", f.x + 3, f.y, 8, "<3", "--color-heart", -1.8);
+      f.danceUntil = this.t + 5;
+    }
+    this.announce(welcomeCopy(user, f.name, tick), 4.8);
+    this.toast(user, `série ${tick.visitStreak}`);
+    this.cue("follow");
+  }
+
+  mine(user: string, visit: VisitTick | null) {
+    const f = this.fishOf(user);
+    if (!f) {
+      this.announce("Pas encore de pensionnaire — !adopte");
+      return;
+    }
+    if (visit?.isWelcome) {
+      this.welcomeFish(user, f, visit);
+      f.hunger = Math.min(100, f.hunger + 6);
+      return;
+    }
+    this.pet(user);
+    this.announce(mineCopy(f.name, f.visitStreak, f.totalVisits), 3.8);
+    this.toast(user, `série ${Math.max(1, f.visitStreak)}`);
+  }
+
+  seedAdoptVisit(f: Fish, now = Date.now()) {
+    if (f.lastSeenAt) return;
+    const tick = tickVisit({ lastSeenAt: null, visitStreak: 0, totalVisits: 0 }, now);
+    this.applyVisit(f, tick);
+  }
+
+  /** Studio helper: rewind lastSeenAt then fire chat so the overlay can preview the loop. */
+  simulateReturn(hours = 22, user?: string) {
+    let f = user ? this.fishOf(user) : this.fish.find((x) => x.namedBy);
+    if (!f) {
+      this.adopt("Studio", "Marée");
+      f = this.fishOf("Studio");
+    }
+    if (!f) return;
+    const nick = f.namedBy || user || "Studio";
+    f.namedBy = nick;
+    if (f.visitStreak < 1) {
+      f.visitStreak = 3;
+      f.totalVisits = Math.max(3, f.totalVisits);
+    }
+    f.lastSeenAt = Date.now() - Math.max(1, hours) * 3_600_000;
+    this.command(nick, "je suis de retour");
+  }
+
   visitor(user: string) {
     if (this.fish.length >= 12) {
       this.announce("Le bac est déjà peuplé");
@@ -363,6 +463,7 @@ export class AquariumSim {
     target.namedBy = user;
     target.resident = true;
     target.leaveAt = null;
+    this.seedAdoptVisit(target);
     this.burst("spark", target.x, target.y, 6, "*", "--color-accent", -1.2);
     this.announce(mine ? `${user} renomme ${name}` : `${user} adopte ${name}`);
     this.cue("follow");
@@ -473,15 +574,15 @@ export class AquariumSim {
     this.lastChatAt = this.t;
     this.toast(user, "follow");
     if (this.fishOf(user)) {
-      this.announce(`${user} est de retour`);
-      this.cue("follow");
+      this.notePresence(user);
       return;
     }
     const label = sanitizeName(user) || user.slice(0, 16);
+    let adopted: Fish | undefined;
     if (this.fish.length < 12) {
-      const f = this.spawnFish(pick(RESIDENT_SPECIES) ?? "clown", true, label);
-      f.namedBy = user;
-      f.x = 2;
+      adopted = this.spawnFish(pick(RESIDENT_SPECIES) ?? "clown", true, label);
+      adopted.namedBy = user;
+      adopted.x = 2;
     } else {
       const free = this.fish.find((f) => !f.namedBy && this.t >= f.eggUntil);
       if (free) {
@@ -489,8 +590,10 @@ export class AquariumSim {
         free.namedBy = user;
         free.resident = true;
         free.leaveAt = null;
+        adopted = free;
       }
     }
+    if (adopted) this.seedAdoptVisit(adopted);
     this.bubbles(10);
     this.announce(`${user} rejoint le récif`);
     this.cue("follow");
@@ -500,6 +603,7 @@ export class AquariumSim {
   sub(user: string) {
     this.lastChatAt = this.t;
     this.toast(user, "sub");
+    this.notePresence(user);
     this.dance(user);
     this.announce(`${user} sub — le récif danse`);
     this.cue("sub");
@@ -520,6 +624,7 @@ export class AquariumSim {
 
   bits(user: string, amount: number) {
     this.lastChatAt = this.t;
+    this.notePresence(user);
     this.feed(user);
     if (amount >= 500) this.treasure(user);
     this.announce(`${user} bits ${amount}`);
@@ -538,7 +643,13 @@ export class AquariumSim {
       const f = this.spawnFish(row.species, row.resident, row.name);
       f.id = row.id;
       f.namedBy = row.namedBy;
+      f.lastSeenAt = row.lastSeenAt;
+      f.visitStreak = row.visitStreak;
+      f.totalVisits = row.totalVisits;
       f.hunger = offlineHunger(row.hunger, save.savedAt, SPECIES[row.species]?.hungerRate ?? 0.3);
+      if (row.namedBy && ownerGoneLong(row.lastSeenAt, Date.now())) {
+        f.hunger = longAbsenceHunger(f.hunger);
+      }
       f.seed = row.seed;
       const num = Number.parseInt(row.id.replace(/\D/g, ""), 10);
       if (Number.isFinite(num)) seq = Math.max(seq, num + 1);
@@ -550,7 +661,7 @@ export class AquariumSim {
     if (!force && this.t - this.saveAt < 5) return;
     this.saveAt = this.t;
     writeTank({
-      v: 1,
+      v: TANK_SAVE_VERSION,
       savedAt: Date.now(),
       simTime: this.t,
       dayPhase: this.dayPhase,
@@ -707,6 +818,10 @@ export class AquariumSim {
       }
 
       f.hunger = Math.max(0, f.hunger - spec.hungerRate * dt);
+      if (f.namedBy && ownerGoneLong(f.lastSeenAt, Date.now())) {
+        f.hunger = Math.max(f.hunger, 14);
+        f.starvedFor = 0;
+      }
       if (f.hunger <= 0.5) {
         f.starvedFor += dt;
         if (f.starvedFor > 85) {
@@ -864,6 +979,7 @@ export class AquariumSim {
         hunger: f.hunger,
         mood: this.moodOf(f),
         namedBy: f.namedBy,
+        visitStreak: f.visitStreak,
       })),
     };
   }
