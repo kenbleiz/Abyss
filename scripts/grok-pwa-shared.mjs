@@ -140,10 +140,12 @@ export function injectGrokPwaHead(html) {
   return html;
 }
 
+/** Passthrough injector — real Grok Build version injects head tags; we must not drop the body. */
 export function createHeadInjector() {
   return {
-    push() {
-      return [];
+    push(chunk) {
+      if (chunk == null || chunk === "") return [];
+      return [typeof chunk === "string" ? new TextEncoder().encode(chunk) : chunk];
     },
     flush() {
       return [];
