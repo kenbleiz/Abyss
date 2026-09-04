@@ -17,6 +17,7 @@ export interface AquariumViewProps {
   commandRef?: React.MutableRefObject<((user: string, text: string) => void) | null>;
   eventRef?: React.MutableRefObject<((kind: "follow" | "sub" | "raid" | "bits" | "gift", user: string, extra?: number) => void) | null>;
   resetRef?: React.MutableRefObject<(() => void) | null>;
+  returnRef?: React.MutableRefObject<((hours?: number) => void) | null>;
 }
 
 declare global {
@@ -38,6 +39,7 @@ export function AquariumView({
   commandRef,
   eventRef,
   resetRef,
+  returnRef,
 }: AquariumViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -83,6 +85,7 @@ export function AquariumView({
     if (commandRef) commandRef.current = send;
     if (eventRef) eventRef.current = alert;
     if (resetRef) resetRef.current = reset;
+    if (returnRef) returnRef.current = (hours = 22) => sim.simulateReturn(hours);
     window.abyssCommand = send;
     window.abyssEvent = (kind, user, extra) => {
       const k = kind.toLowerCase();
@@ -178,10 +181,11 @@ export function AquariumView({
       if (commandRef) commandRef.current = null;
       if (eventRef) eventRef.current = null;
       if (resetRef) resetRef.current = null;
+      if (returnRef) returnRef.current = null;
       if (window.abyssCommand === send) delete window.abyssCommand;
       if (window.abyssEvent) delete window.abyssEvent;
     };
-  }, [prefix, commandRef, eventRef, resetRef]);
+  }, [prefix, commandRef, eventRef, resetRef, returnRef]);
 
   useEffect(() => {
     const ch = channel.trim();

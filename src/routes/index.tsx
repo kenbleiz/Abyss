@@ -13,6 +13,7 @@ function Home() {
   const commandRef = useRef<((user: string, text: string) => void) | null>(null);
   const eventRef = useRef<((kind: "follow" | "sub" | "raid" | "bits" | "gift", user: string, extra?: number) => void) | null>(null);
   const resetRef = useRef<(() => void) | null>(null);
+  const returnRef = useRef<((hours?: number) => void) | null>(null);
 
   const onCommand = useCallback((user: string, text: string) => {
     commandRef.current?.(user, text);
@@ -24,6 +25,10 @@ function Home() {
 
   const onReset = useCallback(() => {
     resetRef.current?.();
+  }, []);
+
+  const onReturn = useCallback((hours?: number) => {
+    returnRef.current?.(hours);
   }, []);
 
   return (
@@ -40,9 +45,10 @@ function Home() {
           commandRef={commandRef}
           eventRef={eventRef}
           resetRef={resetRef}
+          returnRef={returnRef}
         />
       </section>
-      <StudioDock snap={snap} onCommand={onCommand} onAlert={onAlert} onReset={onReset} />
+      <StudioDock snap={snap} onCommand={onCommand} onAlert={onAlert} onReset={onReset} onReturn={onReturn} />
     </main>
   );
 }

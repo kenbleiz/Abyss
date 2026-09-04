@@ -9,7 +9,7 @@ Aquarium ASCII autonome pour OBS, réactif au chat Twitch.
 3. Décoche « Couper la source quand elle n’est pas visible » — le bac doit continuer à vivre.
 4. Option **Fond transparent** pour le caler sur ta cam.
 
-Le récif se souvient des poissons, des noms et de la faim même si tu relances la source.
+Le récif se souvient des poissons, des noms, de la faim et des visites même si tu relances la source.
 
 ## Chat
 
@@ -18,11 +18,14 @@ Entre ta chaîne Twitch (lecture du chat public, sans login).
 | Commande | Effet |
 |---|---|
 | `!nourrir` / `!feed` | flakes |
-| `!caresse` / `!monpoisson` | cœurs (ton poisson si adopté) |
+| `!caresse` | cœurs (ton poisson si adopté) |
+| `!monpoisson` | ton poisson + série de jours |
 | `!nom Nemo` / `!adopte` | baptise / adopte |
 | `!danse` | le récif s’agite |
 | `!bulle` `!vague` `!poisson` `!requin` `!tresor` | événements |
 | `!aide` | liste dans le bac |
+
+Revenir après une absence : le premier message du jour (ou après ~18 h) fait un **welcome-back** sur *ton* poisson. `!monpoisson` affiche la série. Une longue absence le laisse un peu affamé — jamais en œuf — puis il s’illumine au retour.
 
 **Alertes Twitch** (sans OAuth) : subs, gifts, raids, bits.  
 **Follows** via Streamer.bot dans la source navigateur :
@@ -34,7 +37,7 @@ abyssCommand('nick', '!nourrir')
 
 ## Live autonome
 
-Sans viewers : bulles, crabes, jour/nuit, faim. Trop longtemps sans nourriture, un poisson se replie en œuf puis éclot. Les algues montent si le bac a faim.
+Sans viewers : bulles, crabes, jour/nuit, faim. Trop longtemps sans nourriture, un poisson se replie en œuf puis éclot. Les algues montent si le bac a faim. Un pensionnaire adopté dont le viewer est parti longtemps reste triste, pas puni.
 
 ## Sons
 

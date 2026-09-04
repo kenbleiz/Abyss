@@ -27,6 +27,7 @@ const QUICK: { label: string; cmd: string }[] = [
   { label: "Coffre", cmd: "!tresor" },
   { label: "Aide", cmd: "!aide" },
   { label: "Adopte", cmd: "!adopte Marée" },
+  { label: "Série", cmd: "!monpoisson" },
 ];
 
 export function StudioDock({
@@ -34,11 +35,13 @@ export function StudioDock({
   onCommand,
   onAlert,
   onReset,
+  onReturn,
 }: {
   snap: Snapshot | null;
   onCommand: (user: string, text: string) => void;
   onAlert: (kind: "follow" | "sub" | "raid" | "bits", user: string, extra?: number) => void;
   onReset: () => void;
+  onReturn?: (hours?: number) => void;
 }) {
   const settings = useSettings();
   const [draft, setDraft] = useState("");
@@ -231,10 +234,25 @@ export function StudioDock({
           >
             Bits
           </button>
+          <button
+            type="button"
+            className="h-9 rounded-md border border-border bg-bg px-2.5 font-mono text-xs text-fg"
+            onClick={() => onReturn?.(22)}
+          >
+            Retour
+          </button>
+          <button
+            type="button"
+            className="h-9 rounded-md border border-border bg-bg px-2.5 font-mono text-xs text-fg"
+            onClick={() => onReturn?.(80)}
+          >
+            Longue absence
+          </button>
         </div>
         <p className="mt-2 text-xs leading-relaxed text-muted">
           Subs et raids arrivent tout seuls du chat Twitch. Les follows passent par Streamer.bot :
           <code className="text-muted"> abyssEvent('follow','nick')</code>
+          {" "}— <strong className="font-medium text-fg">Retour</strong> simule un viewer qui revient (série / welcome-back).
         </p>
 
         <section className="mt-5">
@@ -251,6 +269,7 @@ export function StudioDock({
                     {" "}
                     · {f.mood}
                     {f.namedBy ? ` · ${f.namedBy}` : ""}
+                    {f.namedBy && f.visitStreak > 0 ? ` · ${f.visitStreak}j` : ""}
                   </span>
                 </span>
                 <span className="tabular-nums text-muted">{Math.round(f.hunger)}%</span>
