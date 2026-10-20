@@ -16,7 +16,7 @@ function parseTags(raw: string): Record<string, string> {
   return tags;
 }
 
-function parseIrcLine(line: string): TwitchEvent | "ping" | null {
+export function parseIrcLine(line: string): TwitchEvent | "ping" | "joined" | null {
   let rest = line;
   let tags: Record<string, string> = {};
   if (rest.startsWith("@")) {
@@ -25,6 +25,8 @@ function parseIrcLine(line: string): TwitchEvent | "ping" | null {
     rest = rest.slice(sp + 1);
   }
   if (rest.startsWith("PING")) return "ping";
+  // Twitch n'envoie ROOMSTATE que si la chaîne existe : c'est la vraie confirmation d'entrée.
+  if (/^:tmi\.twitch\.tv ROOMSTATE #\w+/.test(rest)) return "joined";
 
   if (rest.includes(" USERNOTICE ")) {
     const login = tags.login || tags["display-name"] || "viewer";
@@ -85,7 +87,6 @@ export function connectTwitchChat(
       ws?.send(`NICK ${nick}`);
       ws?.send("CAP REQ :twitch.tv/tags twitch.tv/commands");
       ws?.send(`JOIN #${ch}`);
-      onStatus?.("live");
     };
 
     ws.onmessage = (ev) => {
@@ -95,6 +96,10 @@ export function connectTwitchChat(
         const parsed = parseIrcLine(line);
         if (parsed === "ping") {
           ws?.send("PONG :tmi.twitch.tv");
+          continue;
+        }
+        if (parsed === "joined") {
+          onStatus?.("live");
           continue;
         }
         if (parsed) onEvent(parsed);

@@ -2,6 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { AquariumSim } from "@/lib/aquarium/sim";
 import { measureCell, readPalette, renderAquarium } from "@/lib/aquarium/renderer";
 import { connectTwitchChat, SIM_LINES, SIM_NICKS } from "@/lib/aquarium/twitch";
+
+const TWITCH_STATUS_LABEL = {
+  connecting: "connexion…",
+  live: "en direct",
+  error: "hors ligne, nouvel essai",
+} as const;
 import { playCue, setAudioEnabled, startAmbience, stopAmbience, unlockAudio } from "@/lib/aquarium/audio";
 import { clearTank } from "@/lib/aquarium/save";
 import type { Snapshot } from "@/lib/aquarium/types";
@@ -46,6 +52,7 @@ export function AquariumView({
   const simRef = useRef<AquariumSim | null>(null);
   const snapCb = useRef(onSnapshot);
   const chRef = useRef(channel);
+  const twitchStatusRef = useRef<keyof typeof TWITCH_STATUS_LABEL>("connecting");
   const simChatRef = useRef(simulated);
   const transparentRef = useRef(transparent);
   const hudRef = useRef(showHud);
@@ -160,7 +167,7 @@ export function AquariumView({
         accSnap = 0;
         const snap = sim.snapshot(
           chRef.current.trim()
-            ? `twitch/${chRef.current.trim()}`
+            ? `twitch/${chRef.current.trim()} · ${TWITCH_STATUS_LABEL[twitchStatusRef.current]}`
             : simChatRef.current
               ? "chat simulé"
               : "autonome",
@@ -190,9 +197,16 @@ export function AquariumView({
   useEffect(() => {
     const ch = channel.trim();
     if (!ch) return;
-    return connectTwitchChat(ch, (ev) => {
-      simRef.current?.handleTwitch(ev);
-    });
+    twitchStatusRef.current = "connecting";
+    return connectTwitchChat(
+      ch,
+      (ev) => {
+        simRef.current?.handleTwitch(ev);
+      },
+      (state) => {
+        twitchStatusRef.current = state;
+      },
+    );
   }, [channel]);
 
   useEffect(() => {
