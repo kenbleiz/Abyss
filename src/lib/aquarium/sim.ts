@@ -1003,7 +1003,7 @@ export class AquariumSim {
     return { lines: a.open ? CHEST_OPEN : CHEST_CLOSED, colorVar: "--color-fish-gold" };
   }
 
-  fishSprite(f: Fish): { lines: string[]; colorVar: string } {
+  fishSprite(f: Fish): { lines: string[]; colorVar: string; accents?: Record<string, string> } {
     if (this.t < f.eggUntil) {
       const blink = Math.floor(this.t * 3 + f.seed) % 2 === 0 ? "(o)" : "(.)";
       return { lines: [blink], colorVar: "--color-fish-angel" };
@@ -1013,7 +1013,7 @@ export class AquariumSim {
     const i = Math.floor(this.t * 4 + f.seed * 3) % frames.length;
     let lines = frames[i] ?? frames[0]!;
     if (f.vx < 0) lines = flipLines(lines);
-    return { lines, colorVar: spec.right.colorVar };
+    return { lines, colorVar: spec.right.colorVar, accents: spec.right.accents };
   }
 }
 

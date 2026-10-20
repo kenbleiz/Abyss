@@ -14,6 +14,8 @@ export type Mood = "ok" | "hungry" | "happy" | "sleeping" | "sick" | "egg";
 export interface Sprite {
   frames: string[][];
   colorVar: string;
+  /** Couleur par glyphe (variable CSS), appliquée après retournement. */
+  accents?: Record<string, string>;
 }
 
 export interface Species {
