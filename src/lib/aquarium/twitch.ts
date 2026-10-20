@@ -1,4 +1,17 @@
 const IRC_URL = "wss://irc-ws.chat.twitch.tv:443";
+/** Sans ROOMSTATE après ce délai, on suppose la chaîne introuvable (un réseau lent donne le même silence). */
+export const JOIN_TIMEOUT_MS = 8000;
+
+export type TwitchStatus = "connecting" | "live" | "not-found" | "error";
+
+type SocketLike = {
+  onopen: (() => void) | null;
+  onmessage: ((ev: { data: unknown }) => void) | null;
+  onerror: (() => void) | null;
+  onclose: (() => void) | null;
+  send(data: string): void;
+  close(): void;
+};
 
 export type TwitchEvent =
   | { kind: "chat"; user: string; text: string; bits?: number }
@@ -59,22 +72,34 @@ export function parseIrcLine(line: string): TwitchEvent | "ping" | "joined" | nu
 export function connectTwitchChat(
   channel: string,
   onEvent: (event: TwitchEvent) => void,
-  onStatus?: (state: "connecting" | "live" | "error") => void,
+  onStatus?: (state: TwitchStatus) => void,
+  options: {
+    createSocket?: (url: string) => SocketLike;
+    joinTimeoutMs?: number;
+  } = {},
 ): () => void {
+  const createSocket =
+    options.createSocket ?? ((url: string) => new WebSocket(url) as unknown as SocketLike);
+  const joinTimeoutMs = options.joinTimeoutMs ?? JOIN_TIMEOUT_MS;
   const ch = channel.replace(/^#/, "").toLowerCase().trim();
   if (!ch) return () => {};
 
-  let ws: WebSocket | null = null;
+  let ws: SocketLike | null = null;
   let closed = false;
   let attempt = 0;
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
+  let joinTimer: ReturnType<typeof setTimeout> | null = null;
+  const clearJoinTimer = () => {
+    if (joinTimer) clearTimeout(joinTimer);
+    joinTimer = null;
+  };
 
   const connect = () => {
     if (closed) return;
     onStatus?.("connecting");
     const nick = `justinfan${Math.floor(10000 + Math.random() * 80000)}`;
     try {
-      ws = new WebSocket(IRC_URL);
+      ws = createSocket(IRC_URL);
     } catch {
       onStatus?.("error");
       scheduleRetry();
@@ -87,6 +112,11 @@ export function connectTwitchChat(
       ws?.send(`NICK ${nick}`);
       ws?.send("CAP REQ :twitch.tv/tags twitch.tv/commands");
       ws?.send(`JOIN #${ch}`);
+      clearJoinTimer();
+      joinTimer = setTimeout(() => {
+        joinTimer = null;
+        if (!closed) onStatus?.("not-found");
+      }, joinTimeoutMs);
     };
 
     ws.onmessage = (ev) => {
@@ -99,6 +129,7 @@ export function connectTwitchChat(
           continue;
         }
         if (parsed === "joined") {
+          clearJoinTimer();
           onStatus?.("live");
           continue;
         }
@@ -111,6 +142,7 @@ export function connectTwitchChat(
     };
 
     ws.onclose = () => {
+      clearJoinTimer();
       if (closed) return;
       onStatus?.("error");
       scheduleRetry();
@@ -128,6 +160,7 @@ export function connectTwitchChat(
 
   return () => {
     closed = true;
+    clearJoinTimer();
     if (retryTimer) clearTimeout(retryTimer);
     ws?.close();
   };
