@@ -23,6 +23,7 @@ const FALLBACK: Record<string, string> = {
   "--color-plant": "#5d8f78",
   "--color-bubble": "#9ec9c0",
   "--color-fish-clown": "#c47a5a",
+  "--color-fish-stripe": "#f2efe6",
   "--color-fish-tang": "#6aa8a0",
   "--color-fish-angel": "#c5d4ce",
   "--color-fish-gold": "#c4a574",
@@ -98,7 +99,7 @@ export function renderAquarium(
   ctx.textBaseline = "top";
   ctx.textAlign = "left";
 
-  const blit = (lines: string[], x: number, y: number, color: string, alpha = 1) => {
+  const blit = (lines: string[], x: number, y: number, color: string, alpha = 1, accents?: Record<string, string>) => {
     ctx.globalAlpha = alpha;
     ctx.fillStyle = color;
     const px = x * cellW;
@@ -108,6 +109,7 @@ export function renderAquarium(
       for (let c = 0; c < line.length; c++) {
         const ch = line[c]!;
         if (ch === " ") continue;
+        if (accents) ctx.fillStyle = accents[ch] ?? color;
         ctx.fillText(ch, px + c * cellW, py + r * cellH);
       }
     }
@@ -177,7 +179,10 @@ export function renderAquarium(
     const mood = sim.moodOf(f);
     const alpha =
       mood === "egg" ? 0.9 : mood === "sleeping" ? 0.55 : mood === "sick" ? 0.5 : mood === "hungry" ? 0.75 : 1;
-    blit(spr.lines, f.x, f.y, color(spr.colorVar), alpha);
+    const accents = spr.accents
+      ? Object.fromEntries(Object.entries(spr.accents).map(([ch, v]) => [ch, color(v)]))
+      : undefined;
+    blit(spr.lines, f.x, f.y, color(spr.colorVar), alpha, accents);
     const showName = Boolean(f.namedBy) || sim.t < f.danceUntil || mood === "egg";
     if (showName && f.y >= 3) {
       const label = f.namedBy ? `${f.name}` : f.name;

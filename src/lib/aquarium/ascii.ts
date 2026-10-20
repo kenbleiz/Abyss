@@ -24,9 +24,14 @@ export function flipLines(lines: string[]): string[] {
   );
 }
 
-function sprite(frames: string[][], colorVar: string) {
-  return { frames, colorVar };
+function sprite(frames: string[][], colorVar: string, accents?: Record<string, string>) {
+  return accents ? { frames, colorVar, accents } : { frames, colorVar };
 }
+
+// Accent par glyphe (appliqué après retournement) : l'œil ressort sur toutes les espèces.
+const EYE = { "°": "--color-fg" };
+// Clown : rayures blanches sur corps orange.
+const CLOWN_ACCENTS = { ...EYE, "|": "--color-fish-stripe" };
 
 export const SPECIES: Record<SpeciesId, Species> = {
   clown: {
@@ -35,7 +40,15 @@ export const SPECIES: Record<SpeciesId, Species> = {
     speed: 7.4,
     amplitude: 0.55,
     hungerRate: 0.35,
-    right: sprite([["><(((°>"], ["><((((°>"]], "--color-fish-clown"),
+    right: sprite(
+      [
+        ["  .-|-|-. ", "><( | | °>", "  `-|-|-' "],
+        ["  .-|-|-. ", ">=( | | °>", "  `-|-|-' "],
+        ["  .-|-|-. ", "}<( | | °>", "  `-|-|-' "],
+      ],
+      "--color-fish-clown",
+      CLOWN_ACCENTS,
+    ),
   },
   tang: {
     id: "tang",
@@ -43,7 +56,14 @@ export const SPECIES: Record<SpeciesId, Species> = {
     speed: 8.2,
     amplitude: 0.4,
     hungerRate: 0.32,
-    right: sprite([["><xxx°>"], ["><xx°>"]], "--color-fish-tang"),
+    right: sprite(
+      [
+        ["  ,--._  ", "><(xx(x°>", "  `--'   "],
+        ["  ,--._  ", ">=(xx(x°>", "  `--'   "],
+      ],
+      "--color-fish-tang",
+      EYE,
+    ),
   },
   guppy: {
     id: "guppy",
@@ -51,7 +71,14 @@ export const SPECIES: Record<SpeciesId, Species> = {
     speed: 10.5,
     amplitude: 0.7,
     hungerRate: 0.5,
-    right: sprite([["><>"], [">->"]], "--color-fish-gold"),
+    right: sprite(
+      [
+        ["  ,-. ", "><(_°>"],
+        ["  ,-. ", ">-(_°>"],
+      ],
+      "--color-fish-gold",
+      EYE,
+    ),
   },
   angel: {
     id: "angel",
@@ -61,10 +88,11 @@ export const SPECIES: Record<SpeciesId, Species> = {
     hungerRate: 0.28,
     right: sprite(
       [
-        ["  /\\", "<') )", "  \\/"],
-        ["  /\\", "<')  )", "  \\/"],
+        ["   /|  ", "><(( °>", "   \\|  "],
+        ["   /|  ", ">=(( °>", "   \\|  "],
       ],
       "--color-fish-angel",
+      EYE,
     ),
   },
   puffer: {
@@ -75,10 +103,11 @@ export const SPECIES: Record<SpeciesId, Species> = {
     hungerRate: 0.3,
     right: sprite(
       [
-        [" .--.", "<')  (", " `--'"],
-        [" .--.", "<')oo(", " `--'"],
+        ["  .'''.  ", " ( o  °)>", "  '...'  "],
+        ["  .:::.  ", " ( O  °)>", "  ':::'  "],
       ],
       "--color-fish-gold",
+      EYE,
     ),
   },
   horse: {
@@ -89,10 +118,11 @@ export const SPECIES: Record<SpeciesId, Species> = {
     hungerRate: 0.22,
     right: sprite(
       [
-        [" :?", " ) )", " /|"],
-        [" :?", " ( (", " /|"],
+        ["  ,°.", "  )_)", "  ( (", "   ~ "],
+        ["  ,°.", "  )_)", "  ) )", "   ~ "],
       ],
       "--color-fish-tang",
+      EYE,
     ),
   },
   jelly: {
@@ -103,10 +133,11 @@ export const SPECIES: Record<SpeciesId, Species> = {
     hungerRate: 0.18,
     right: sprite(
       [
-        ["  °", " ( )", " : :"],
-        ["  °", " ( )", "  : "],
+        ["  .-\"-.  ", " ( ° ° ) ", "  )|(|(  "],
+        ["  .-\"-.  ", " ( ° ° ) ", "  (|)|)  "],
       ],
       "--color-fish-jelly",
+      EYE,
     ),
   },
   gold: {
@@ -115,7 +146,15 @@ export const SPECIES: Record<SpeciesId, Species> = {
     speed: 6.5,
     amplitude: 0.45,
     hungerRate: 0.33,
-    right: sprite([["><((((°>"], ["><(((°>"]], "--color-fish-gold"),
+    right: sprite(
+      [
+        ["   .--._   ", "\\/((((((°\\ ", "/\\(((((( / ", "   `--'    "],
+        ["   .--._   ", "\\\\((((((°\\ ", "//(((((( / ", "   `--'    "],
+        ["   .--._   ", "//((((((°\\ ", "\\\\(((((( / ", "   `--'    "],
+      ],
+      "--color-fish-gold",
+      EYE,
+    ),
   },
   eel: {
     id: "eel",
@@ -123,7 +162,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
     speed: 6.8,
     amplitude: 0.2,
     hungerRate: 0.26,
-    right: sprite([["><~~~~°>"], ["><≈≈≈≈°>"]], "--color-fish-tang"),
+    right: sprite([["<=≈≈≈≈≈≈(°>"], ["<=~~~~~~(°>"]], "--color-fish-tang", EYE),
   },
 };
 
