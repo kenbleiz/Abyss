@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AquariumSim } from "@/lib/aquarium/sim";
+import { frameDelta } from "@/lib/aquarium/frame";
 import { measureCell, readPalette, renderAquarium } from "@/lib/aquarium/renderer";
 import { connectTwitchChat, SIM_LINES, SIM_NICKS } from "@/lib/aquarium/twitch";
 import { playCue, setAudioEnabled, startAmbience, stopAmbience, unlockAudio } from "@/lib/aquarium/audio";
@@ -145,7 +146,7 @@ export function AquariumView({
     fit();
 
     const loop = (now: number) => {
-      const dt = Math.min(0.1, (now - last) / 1000);
+      const dt = frameDelta(now, last);
       last = now;
       sim.update(dt);
       if (sfxRef.current) {

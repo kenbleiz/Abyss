@@ -1,3 +1,4 @@
+import { wrapIndex } from "./frame";
 import {
   CASTLE,
   CHEST_CLOSED,
@@ -758,6 +759,7 @@ export class AquariumSim {
   }
 
   update(dt: number) {
+    if (!Number.isFinite(dt) || dt <= 0) return;
     const capped = this.reducedMotion ? dt * 0.65 : dt;
     this.t += capped;
     this.dayPhase = (this.dayPhase + capped / 480) % 1;
@@ -995,7 +997,7 @@ export class AquariumSim {
     if (a.kind === "shark") return { lines: SHARK_RIGHT, colorVar: "--color-fish-shark" };
     if (a.kind === "crab") return { lines: CRAB, colorVar: "--color-fish-clown" };
     if (a.kind === "snail") {
-      return { lines: [SNAIL[Math.floor(a.frame) % SNAIL.length]!], colorVar: "--color-sand" };
+      return { lines: [SNAIL[wrapIndex(Math.floor(a.frame), SNAIL.length)]!], colorVar: "--color-sand" };
     }
     if (a.kind === "shrimp") return { lines: [SHRIMP[0]!], colorVar: "--color-heart" };
     return { lines: a.open ? CHEST_OPEN : CHEST_CLOSED, colorVar: "--color-fish-gold" };
