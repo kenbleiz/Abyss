@@ -39,7 +39,7 @@ function Home() {
           transparent={false}
           showHud={settings.hud}
           channel={settings.channel}
-          simulated={settings.simulated}
+          simulated={settings.simulated && !settings.channel}
           sfx={settings.sfx}
           onSnapshot={setSnap}
           commandRef={commandRef}
