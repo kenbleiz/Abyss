@@ -20,6 +20,7 @@ import {
   parseCommand,
   type CanonicalCmd,
 } from "./commands";
+import { pickAdoptionTarget } from "./adoption.ts";
 import { sanitizeName } from "./names";
 import { loadTank, offlineHunger, serializeFish, TANK_SAVE_VERSION, writeTank } from "./save";
 import type { TwitchEvent } from "./twitch";
@@ -456,9 +457,11 @@ export class AquariumSim {
       return;
     }
     const mine = this.fishOf(user);
-    const target =
-      mine ?? this.fish.find((f) => !f.namedBy && this.t >= f.eggUntil) ?? this.fish.find((f) => this.t >= f.eggUntil);
-    if (!target) return;
+    const target = pickAdoptionTarget(this.fish, user, this.t);
+    if (!target) {
+      this.announce(`${user} : aucun poisson libre à adopter pour l'instant`);
+      return;
+    }
     target.name = name;
     target.namedBy = user;
     target.resident = true;
