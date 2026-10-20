@@ -30,5 +30,12 @@
   "include": [
     "src",
     "server"
+  ],
+  "exclude": [
+    "src/lib/auth/gates.tsx",
+    "src/lib/auth/middleware.ts",
+    "src/lib/auth/use-current-user.ts",
+    "src/lib/auth/verify.server.ts",
+    "src/lib/multiplayer/index.ts"
   ]
 }

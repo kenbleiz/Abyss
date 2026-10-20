@@ -1,11 +1,11 @@
-import type { IntelView, BotLine } from "@/lib/aquarium/types";
+import type { BotSpeech } from "@/lib/aquarium/bot";
 import { cn } from "@/lib/utils";
 
 export function BotBubble({
   bot,
   compact = false,
 }: {
-  bot: BotLine | null;
+  bot: BotSpeech | null;
   compact?: boolean;
 }) {
   return (
