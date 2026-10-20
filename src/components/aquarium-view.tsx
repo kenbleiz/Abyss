@@ -2,15 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { AquariumSim } from "@/lib/aquarium/sim";
 import { measureCell, readPalette, renderAquarium } from "@/lib/aquarium/renderer";
 import { connectTwitchChat, SIM_LINES, SIM_NICKS } from "@/lib/aquarium/twitch";
+import { playCue, setAudioEnabled, startAmbience, stopAmbience, unlockAudio } from "@/lib/aquarium/audio";
+import { clearTank } from "@/lib/aquarium/save";
+import type { Snapshot } from "@/lib/aquarium/types";
 
 const TWITCH_STATUS_LABEL = {
   connecting: "connexion…",
   live: "en direct",
+  "not-found": "chaîne introuvable ?",
   error: "hors ligne, nouvel essai",
 } as const;
-import { playCue, setAudioEnabled, startAmbience, stopAmbience, unlockAudio } from "@/lib/aquarium/audio";
-import { clearTank } from "@/lib/aquarium/save";
-import type { Snapshot } from "@/lib/aquarium/types";
 
 export interface AquariumViewProps {
   transparent: boolean;
