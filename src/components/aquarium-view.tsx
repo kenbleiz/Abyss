@@ -5,6 +5,7 @@ import { measureCell, readPalette, renderAquarium } from "@/lib/aquarium/rendere
 import { connectTwitchChat, SIM_LINES, SIM_NICKS } from "@/lib/aquarium/twitch";
 import { playCue, setAudioEnabled, startAmbience, stopAmbience, unlockAudio } from "@/lib/aquarium/audio";
 import { clearTank } from "@/lib/aquarium/save";
+import { createRateLimiter } from "@/lib/aquarium/rate";
 import type { Snapshot } from "@/lib/aquarium/types";
 
 const TWITCH_STATUS_LABEL = {
@@ -96,8 +97,10 @@ export function AquariumView({
     if (resetRef) resetRef.current = reset;
     if (returnRef) returnRef.current = (hours = 22) => sim.simulateReturn(hours);
     window.abyssCommand = send;
+    const allowEvent = createRateLimiter(5, 10_000);
     window.abyssEvent = (kind, user, extra) => {
-      const k = kind.toLowerCase();
+      if (!allowEvent()) return;
+      const k = String(kind).toLowerCase();
       if (k === "follow" || k === "sub" || k === "raid" || k === "bits" || k === "gift") {
         alert(k, user, extra);
       }
