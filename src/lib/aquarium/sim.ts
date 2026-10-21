@@ -1,4 +1,4 @@
-import { wrapIndex } from "./frame";
+import { MAX_ROWS, wrapIndex } from "./frame";
 import {
   CASTLE,
   CHEST_CLOSED,
@@ -138,7 +138,7 @@ export class AquariumSim {
 
   resize(cols: number, rows: number) {
     const nextCols = Math.max(48, Math.min(240, Math.floor(cols)));
-    const nextRows = Math.max(24, Math.min(80, Math.floor(rows)));
+    const nextRows = Math.max(24, Math.min(MAX_ROWS, Math.floor(rows)));
     if (nextCols === this.cols && nextRows === this.rows) return;
     this.cols = nextCols;
     this.rows = nextRows;

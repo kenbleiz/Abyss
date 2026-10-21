@@ -1,3 +1,4 @@
+import { cellHeightFor } from "./frame";
 import { flipLines } from "./ascii";
 import type { AquariumSim } from "./sim";
 
@@ -224,7 +225,7 @@ export function measureCell(
   ctx: CanvasRenderingContext2D,
   height: number,
 ): { cellW: number; cellH: number } {
-  const cellH = Math.max(12, Math.min(22, Math.floor(height / 42)));
+  const cellH = cellHeightFor(height);
   ctx.font = `500 ${cellH}px "IBM Plex Mono", ui-monospace, monospace`;
   const cellW = Math.max(7, ctx.measureText("M").width);
   return { cellW, cellH };
