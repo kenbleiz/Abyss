@@ -207,7 +207,12 @@ export function renderAquarium(
     const algae = sim.algae > 0.45 ? "  ·  algues" : "";
     const eggBit = eggs ? `  ·  ${eggs} œuf${eggs > 1 ? "s" : ""}` : "";
     const line = `ABYSS  ·  ${sim.fish.length} poissons  ·  faim ${hunger}%${eggBit}${algae}  ·  ${clock}`;
-    blit([line], 2, sim.rows - 3, pal.muted, 0.85);
+    // Fond sombre semi-transparent pour que la ligne reste lisible sur les plantes.
+    const hudY = sim.rows - 3;
+    ctx.globalAlpha = 0.78;
+    ctx.fillStyle = pal.waterDeep;
+    ctx.fillRect(cellW, hudY * cellH - 2, (line.length + 2) * cellW, cellH + 4);
+    blit([line], 2, hudY, pal.muted, 0.85);
   }
 }
 
