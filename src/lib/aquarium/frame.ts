@@ -14,3 +14,14 @@ export function wrapIndex(i: number, length: number): number {
   if (length <= 0 || !Number.isFinite(i)) return 0;
   return ((i % length) + length) % length;
 }
+
+/** Nombre maximal de lignes du bac (voir AquariumSim.resize). */
+export const MAX_ROWS = 80;
+
+/**
+ * Hauteur d'une case en pixels. Sur un écran très haut (1080×1920), on
+ * agrandit les cases pour que MAX_ROWS lignes remplissent toute la hauteur.
+ */
+export function cellHeightFor(height: number): number {
+  return Math.max(12, Math.min(22, Math.floor(height / 42)), Math.ceil(height / MAX_ROWS));
+}
