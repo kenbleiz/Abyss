@@ -51,7 +51,7 @@ export function StudioDock({
   const overlayUrl = useMemo(() => {
     if (typeof window === "undefined") return "/overlay";
     return `${window.location.origin}/overlay${overlaySearch(settings)}`;
-  }, [settings.channel, settings.transparent, settings.hud, settings.simulated, settings.sfx]);
+  }, [settings]);
 
   const copy = async () => {
     try {
