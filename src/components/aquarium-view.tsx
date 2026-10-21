@@ -115,6 +115,8 @@ export function AquariumView({
       if (document.visibilityState === "visible") unlockAudio();
     };
     document.addEventListener("visibilitychange", onVis);
+    const onHide = () => sim.persist(true);
+    window.addEventListener("pagehide", onHide);
 
     const palette = readPalette();
     let raf = 0;
@@ -187,6 +189,10 @@ export function AquariumView({
       ro.disconnect();
       stopAmbience();
       document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pagehide", onHide);
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+      sim.persist(true);
       if (commandRef) commandRef.current = null;
       if (eventRef) eventRef.current = null;
       if (resetRef) resetRef.current = null;

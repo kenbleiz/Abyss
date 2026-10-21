@@ -264,6 +264,9 @@ export class AquariumSim {
       return false;
     }
 
+    if (this.userCooldown.size > 200) {
+      for (const [k, until] of this.userCooldown) if (until <= now) this.userCooldown.delete(k);
+    }
     this.userCooldown.set(userKey, now + 3.2);
     this.cooldownUntil[parsed.cmd] = now + COMMAND_COOLDOWN[parsed.cmd];
     this.toast(user, text);

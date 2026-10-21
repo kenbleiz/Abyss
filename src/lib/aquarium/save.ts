@@ -63,7 +63,7 @@ export function migrateTank(raw: unknown, now = Date.now()): TankSave | null {
 
   const fish = data.fish
     .filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === "object")
-    .filter((f) => SPECIES.has(String(f.species)) || f.species === "eel")
+    .filter((f) => SPECIES.has(String(f.species)))
     .slice(0, 12)
     .map((f) => {
       const namedBy = typeof f.namedBy === "string" && f.namedBy ? f.namedBy : null;
